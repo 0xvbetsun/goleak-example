@@ -42,6 +42,7 @@ Next, checkout to the `detecting` branch
 ```sh
 $ git checkout detecting
 ```
+
 At this step we have added `go.uber.org/goleak` package
 
 ```diff
@@ -91,6 +92,29 @@ FAIL
 make: *** [test] Error 1
 ```
 So, now we have clear understanding that we have a goroutine leak and we are already able to fix it!
+
+## Step 3. Solution
+
+Next, checkout to the `solution` branch 
+We are going to add `sync.WaitGroup` for synchronize all goroutines
+
+Now< after running tests and coverage we will receive correct results
+
+```sh
+$ make test
+
+go test -v -race ./...
+=== RUN   Test_main
+--- PASS: Test_main (2.00s)
+PASS
+ok      github.com/vbetsun/goleak-example 
+
+$ make cover
+
+go test -race -coverprofile=cover.out -coverpkg=./... ./...
+ok      github.com/vbetsun/goleak-example       2.407s  coverage: 100.0% of statements in ./...
+go tool cover -html=cover.out -o cover.html
+```
 
 [doc-img]: https://pkg.go.dev/badge/github.com/vbetsun/goleak-example?status.svg
 [doc]: https://pkg.go.dev/github.com/vbetsun/goleak-example
