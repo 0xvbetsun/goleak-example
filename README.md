@@ -35,14 +35,71 @@ ok      github.com/vbetsun/goleak-example       2.404s  coverage: 100.0% of stat
 go tool cover -html=cover.out -o cover.html
 ```
 
+## Step 2. Detecting
+
+Next, checkout to the `detecting` branch 
+
+```sh
+$ git checkout detecting
+```
+At this step we have added `go.uber.org/goleak` package
+
+```diff
+import (
+	"bytes"
+	"encoding/json"
+	"io"
+	"os"
+	"sync"
+	"testing"
++
++	"go.uber.org/goleak"
+)
+
++func TestMain(m *testing.M) {
++	goleak.VerifyTestMain(m)
++}
++
+...
+```
+And after running test one more time - we have fixed our **False Negative** tests
+
+```sh
+$ make test
+
+go test -v -race ./...
+=== RUN   Test_main
+--- PASS: Test_main (2.00s)
+PASS
+goleak: Errors on successful test run: found unexpected goroutines:
+[Goroutine 7 in state chan send, with github.com/vbetsun/goleak-example.main.func1 on top of the stack:
+goroutine 7 [chan send]:
+github.com/vbetsun/goleak-example.main.func1(0x1)
+        /goleak-example/main.go:15 +0x53
+created by github.com/vbetsun/goleak-example.main
+        /goleak-example/main.go:14 +0x85
+
+ Goroutine 8 in state chan send, with github.com/vbetsun/goleak-example.main.func1 on top of the stack:
+goroutine 8 [chan send]:
+github.com/vbetsun/goleak-example.main.func1(0x2)
+        /goleak-example/main.go:15 +0x53
+created by github.com/vbetsun/goleak-example.main
+        /goleak-example/main.go:14 +0x85
+]
+FAIL    github.com/vbetsun/goleak-example       2.837s
+FAIL
+make: *** [test] Error 1
+```
+So, now we have clear understanding that we have a goroutine leak and we are already able to fix it!
+
 [doc-img]: https://pkg.go.dev/badge/github.com/vbetsun/goleak-example?status.svg
 [doc]: https://pkg.go.dev/github.com/vbetsun/goleak-example
 [ci-img]: https://github.com/vbetsun/goleak-example/actions/workflows/ci.yml/badge.svg
 [ci]: https://github.com/vbetsun/goleak-example/actions/workflows/ci.yml
 [report-img]: https://goreportcard.com/badge/github.com/vbetsun/goleak-example
 [report]: https://goreportcard.com/report/github.com/vbetsun/goleak-example
-[cov-img]: https://codecov.io/gh/vbetsun/goleak-eexample/branch/master/graph/badge.svg
-[cov]: https://codecov.io/gh/vbeetsun/goleak-example
+[cov-img]: https://codecov.io/gh/vbetsun/goleak-example/branch/master/graph/badge.svg
+[cov]: https://codecov.io/gh/vbetsun/goleak-example
 [version-img]: https://img.shields.io/github/go-mod/go-version/vbetsun/goleak-example.svg
 [version]: https://github.com/vbetsun/goleak-example
 
