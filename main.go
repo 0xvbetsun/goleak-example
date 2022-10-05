@@ -2,22 +2,27 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
+	"sync"
 	"time"
 )
 
 func main() {
-	ch := make(chan int)
-	res := make([]int, 0)
+	var wg sync.WaitGroup
+	cnt := 3
+	res := make([]int, cnt)
 
-	for i := 0; i < 3; i++ {
+	for i := 0; i < cnt; i++ {
+		wg.Add(1)
 		go func(num int) {
-			ch <- multiply(num)
+			defer wg.Done()
+			res[num] = multiply(num)
 		}(i)
 	}
-
-	res = append(res, <-ch)
-	fmt.Println(res)
+	wg.Wait()
+	out, _ := json.Marshal(res)
+	fmt.Println(string(out))
 }
 
 func multiply(num int) int {
